@@ -11,13 +11,25 @@
 package caller
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
 	"runtime"
 	"runtime/debug"
 	"strconv"
 	"strings"
 )
+
+type Info struct {
+	Line int
+	File string
+	Func string
+}
+
+func (i Info) String() string {
+	return fmt.Sprintf("%s:%d %s", i.File, i.Line, i.Func)
+}
 
 var rootPath, _ = os.Getwd()
 
@@ -42,17 +54,25 @@ func Auto(packageName string) (string, int) {
 	return clipFileAndLine(file, line)
 }
 
-func Deep(deep int) (string, int) {
+func Deep(deep int) Info {
 
 	var file, line = "", 0
-	_, codePath, codeLine, ok := runtime.Caller(deep)
+	pc, codePath, codeLine, ok := runtime.Caller(deep)
 	if !ok {
-		return file, line
+		return Info{}
 	}
 
 	file, line = codePath, codeLine
 
-	return clipFileAndLine(file, line)
+	var f, l = clipFileAndLine(file, line)
+
+	var info = Info{
+		Line: l,
+		File: f,
+		Func: filepath.Base(runtime.FuncForPC(pc).Name()),
+	}
+
+	return info
 }
 
 func Stack(deep int) (string, int) {
