@@ -1,3 +1,3 @@
-module github.com/lemoyxk/caller
+module github.com/lemonyxk/caller
 
 go 1.17
