@@ -31,7 +31,9 @@ func (i Info) String() string {
 	return fmt.Sprintf("%s:%d %s", i.File, i.Line, i.Func)
 }
 
-var rootPath, _ = os.Getwd()
+var pwd, _ = os.Getwd()
+
+var goRoot = runtime.GOROOT()
 
 func Auto(packageName string) (string, int) {
 
@@ -102,17 +104,33 @@ func clipFileAndLine(file string, line int) (string, int) {
 		return "", 0
 	}
 
-	if runtime.GOOS == "windows" {
-		rootPath = strings.Replace(rootPath, "\\", "/", -1)
+	switch runtime.GOOS {
+	case "windows":
+		pwd = strings.Replace(pwd, "\\", "/", -1)
 	}
 
-	if rootPath == "/" {
+	if pwd == "/" {
 		return file, line
 	}
 
-	if strings.HasPrefix(file, rootPath) {
-		file = file[len(rootPath)+1:]
+	var commonStr = getCommonStr(file, pwd)
+	if commonStr > 0 {
+		file = file[commonStr:]
 	}
 
+	commonStr = getCommonStr(file, goRoot)
+	if commonStr > 0 {
+		file = file[commonStr:]
+	}
 	return file, line
+}
+
+func getCommonStr(str string, str1 string) int {
+	var i = 0
+	for ; i < len(str) && i < len(str1); i++ {
+		if str[i] != str1[i] {
+			break
+		}
+	}
+	return i
 }
