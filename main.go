@@ -116,12 +116,11 @@ func clipFileAndLine(file string, line int) (string, int) {
 		pwd = strings.Replace(pwd, "\\", "/", -1)
 	}
 
-	if pwd == "/" {
-		return file, line
-	}
-
 	var i = getCommonStr(file, pwd)
-	if i > 0 {
+
+	if i <= 1 {
+		return file, line
+	} else {
 		file = file[i:]
 	}
 
