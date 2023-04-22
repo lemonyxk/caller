@@ -58,6 +58,32 @@ func Deep(deep int) Info {
 	return info
 }
 
+func Deeps(deep int) []Info {
+
+	var res []Info
+	for skip := deep; true; skip++ {
+
+		pc, codePath, codeLine, ok := runtime.Caller(skip)
+		if !ok {
+			break
+		}
+
+		file, line := codePath, codeLine
+
+		var f, l = clipFileAndLine(file, line)
+
+		var info = Info{
+			Line: l,
+			File: f,
+			Func: filepath.Base(runtime.FuncForPC(pc).Name()),
+		}
+
+		res = append(res, info)
+	}
+
+	return res
+}
+
 func Stack(deep int) (string, int) {
 	var list = strings.Split(string(debug.Stack()), "\n")
 	var info = strings.TrimSpace(list[deep])
