@@ -12,7 +12,6 @@ package caller
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
@@ -31,29 +30,11 @@ func (i Info) String() string {
 	return fmt.Sprintf("%s:%d %s", i.File, i.Line, i.Func)
 }
 
-var pwd, _ = os.Getwd()
+var pwd = ""
 
-var goRoot = runtime.GOROOT()
-
-func Auto(packageName string) (string, int) {
-
-	var file, line = "", 0
-
-	for skip := 1; true; skip++ {
-		pc, codePath, codeLine, ok := runtime.Caller(skip)
-		if !ok {
-			break
-		}
-
-		prevFunc := runtime.FuncForPC(pc).Name()
-
-		if !strings.Contains(prevFunc, packageName) {
-			file, line = codePath, codeLine
-			break
-		}
-	}
-
-	return clipFileAndLine(file, line)
+func init() {
+	_, codePath, _, _ := runtime.Caller(0)
+	pwd = filepath.Dir(codePath)
 }
 
 func Deep(deep int) Info {
@@ -113,15 +94,11 @@ func clipFileAndLine(file string, line int) (string, int) {
 		return file, line
 	}
 
-	var commonStr = getCommonStr(file, pwd)
-	if commonStr > 0 {
-		file = file[commonStr:]
+	var i = getCommonStr(file, pwd)
+	if i > 0 {
+		file = file[i:]
 	}
 
-	commonStr = getCommonStr(file, goRoot)
-	if commonStr > 0 {
-		file = file[commonStr:]
-	}
 	return file, line
 }
 
