@@ -22,9 +22,10 @@ import (
 )
 
 type Info struct {
-	Line int
-	File string
-	Func string
+	Line   int
+	File   string
+	Func   string
+	Module string
 }
 
 func (i Info) String() string {
@@ -58,12 +59,13 @@ func Deep(deep int) Info {
 	}
 	mux.RUnlock()
 
-	var f, l = clipFileAndLine(file, line)
+	var m, f, l = clipFileAndLine(file, line)
 
 	var info = Info{
-		Line: l,
-		File: f,
-		Func: filepath.Base(runtime.FuncForPC(pc).Name()),
+		Line:   l,
+		File:   f,
+		Func:   filepath.Base(runtime.FuncForPC(pc).Name()),
+		Module: m,
 	}
 
 	mux.Lock()
@@ -74,32 +76,14 @@ func Deep(deep int) Info {
 }
 
 func Deeps(deep int) []Info {
-
 	var res []Info
 	for skip := deep; true; skip++ {
-
-		pc, codePath, codeLine, ok := runtime.Caller(skip)
-		if !ok {
-			break
-		}
-
-		file, line := codePath, codeLine
-
-		var f, l = clipFileAndLine(file, line)
-
-		var info = Info{
-			Line: l,
-			File: f,
-			Func: filepath.Base(runtime.FuncForPC(pc).Name()),
-		}
-
-		res = append(res, info)
+		res = append(res, Deep(skip))
 	}
-
 	return res
 }
 
-func Stack(deep int) (string, int) {
+func Stack(deep int) (string, string, int) {
 	var list = strings.Split(string(debug.Stack()), "\n")
 	var info = strings.TrimSpace(list[deep])
 	var flInfo = strings.Split(strings.Split(info, " ")[0], ":")
@@ -121,9 +105,9 @@ func FuncName() string {
 	return runtime.FuncForPC(pc).Name()
 }
 
-func clipFileAndLine(file string, line int) (string, int) {
+func clipFileAndLine(file string, line int) (string, string, int) {
 	if file == "" || line == 0 {
-		return "", 0
+		return "", "", 0
 	}
 
 	switch runtime.GOOS {
@@ -134,19 +118,23 @@ func clipFileAndLine(file string, line int) (string, int) {
 	var i = getCommonStr(file, pwd)
 
 	if i <= 1 {
-		return file, line
+		return "main", file, line
 	}
 
 	file = file[i:]
 
 	var arr = strings.Split(file, "/")
 	if len(arr) == 1 {
-		return file, line
+		return "main", file, line
 	}
 
-	file = strings.Join(arr[1:], "/")
+	if len(arr) == 2 {
+		return arr[1], file, line
+	}
 
-	return file, line
+	file = strings.Join(arr[2:], "/")
+
+	return arr[1], file, line
 }
 
 func getCommonStr(str string, str1 string) int {
