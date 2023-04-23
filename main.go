@@ -3,7 +3,7 @@
 *
 * @description:
 *
-* @author: lemo
+* @author: lemon
 *
 * @create: 2021-07-01 22:46
 **/
@@ -78,7 +78,11 @@ func Deep(deep int) Info {
 func Deeps(deep int) []Info {
 	var res []Info
 	for skip := deep; true; skip++ {
-		res = append(res, Deep(skip))
+		var info = Deep(skip)
+		if info.File == "" {
+			break
+		}
+		res = append(res, info)
 	}
 	return res
 }
@@ -122,6 +126,9 @@ func clipFileAndLine(file string, line int) (string, string, int) {
 	}
 
 	file = file[i:]
+	if file[0] == '/' {
+		file = file[1:]
+	}
 
 	var arr = strings.Split(file, "/")
 	if len(arr) == 1 {

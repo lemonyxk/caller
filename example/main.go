@@ -3,7 +3,7 @@
 *
 * @description:
 *
-* @author: lemo
+* @author: lemon
 *
 * @create: 2021-07-01 22:46
 **/
@@ -17,5 +17,5 @@ import (
 )
 
 func main() {
-	log.Println(caller.Deep(1))
+	log.Println(caller.Deeps(1))
 }
