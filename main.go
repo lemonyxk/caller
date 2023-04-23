@@ -18,6 +18,7 @@ import (
 	"runtime/debug"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type Info struct {
@@ -31,6 +32,8 @@ func (i Info) String() string {
 }
 
 var pwd = ""
+var mux sync.RWMutex
+var cache = make(map[string]Info)
 
 func init() {
 	_, codePath, _, _ := runtime.Caller(0)
@@ -46,6 +49,14 @@ func Deep(deep int) Info {
 	}
 
 	file, line = codePath, codeLine
+	var key = file + ":" + strconv.Itoa(line)
+
+	mux.RLock()
+	if info, ok := cache[key]; ok {
+		mux.RUnlock()
+		return info
+	}
+	mux.RUnlock()
 
 	var f, l = clipFileAndLine(file, line)
 
@@ -54,6 +65,10 @@ func Deep(deep int) Info {
 		File: f,
 		Func: filepath.Base(runtime.FuncForPC(pc).Name()),
 	}
+
+	mux.Lock()
+	cache[key] = info
+	mux.Unlock()
 
 	return info
 }
@@ -120,9 +135,16 @@ func clipFileAndLine(file string, line int) (string, int) {
 
 	if i <= 1 {
 		return file, line
-	} else {
-		file = file[i:]
 	}
+
+	file = file[i:]
+
+	var arr = strings.Split(file, "/")
+	if len(arr) == 1 {
+		return file, line
+	}
+
+	file = strings.Join(arr[1:], "/")
 
 	return file, line
 }
