@@ -17,5 +17,5 @@ import (
 )
 
 func main() {
-	log.Println(caller.Deeps(1))
+	log.Println(caller.Deep(1))
 }

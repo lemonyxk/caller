@@ -121,8 +121,10 @@ func clipFileAndLine(file string, line int) (string, string, int) {
 
 	var i = getCommonStr(file, pwd)
 
+	var m = "main"
+
 	if i <= 1 {
-		return "main", file, line
+		return m, file, line
 	}
 
 	file = file[i:]
@@ -132,16 +134,25 @@ func clipFileAndLine(file string, line int) (string, string, int) {
 
 	var arr = strings.Split(file, "/")
 	if len(arr) == 1 {
-		return "main", file, line
+		return m, file, line
+	}
+
+	if strings.Contains(arr[0], "@v") {
+		arr = arr[1:]
+		m = strings.Split(arr[0], "@")[0]
+	} else {
+		m = arr[0]
+	}
+
+	if len(arr) == 1 {
+		return m, arr[0], line
 	}
 
 	if len(arr) == 2 {
-		return arr[1], file, line
+		return m, strings.Join(arr, "/"), line
 	}
 
-	file = strings.Join(arr[2:], "/")
-
-	return arr[1], file, line
+	return arr[1], strings.Join(arr[2:], "/"), line
 }
 
 func getCommonStr(str string, str1 string) int {
